@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -12,80 +11,85 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-    // Enregistrer un utilisateur (client ou rafistoleur)
-    public function register(Request $request)
+    public function registerClient(Request $request)
     {
         $this->validate($request, [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
+            'tel' => 'required|string|max:15',
+            'location' => 'required|string|max:255',
             'password' => 'required|string|min:5|confirmed',
-            'status' => 'required|string|in:client,rafistoleur',
         ]);
 
-        // Créer l'utilisateur de base
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'status' => $request->status,
+            'status' => 'client',
         ]);
 
-        // Créer le client ou le rafistoleur en fonction du statut
-        if ($request->status === 'client') {
-            Client::create([
-                'user_id' => $user->id,
-                'name' => $request->name,
-                'email' => $request->email,
-                'tel' => $request->tel,
-                'location' => $request->location,
-                'password' => Hash::make($request->password),
-            ]);
-        } elseif ($request->status === 'rafistoleur') {
-            Rafistoleur::create([
-                'user_id' => $user->id,
-                'name' => $request->name,
-                'email' => $request->email,
-                'tel' => $request->tel,
-                'location' => $request->location,
-                'password' => Hash::make($request->password),
-            ]);
-        }
+        Client::create([
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'tel' => $request->tel,
+            'location' => $request->location,
+            'password' => Hash::make($request->password),
+        ]);
 
-        // Générer un token JWT pour l'utilisateur nouvellement créé
         $token = JWTAuth::fromUser($user);
 
         return response()->json(compact('user', 'token'), 201);
     }
 
-    // Connecter un utilisateur
+    public function registerRafistoleur(Request $request)
+    {
+        $this->validate($request, [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'tel' => 'required|string|max:15',
+            'location' => 'required|string|max:255',
+            'password' => 'required|string|min:5|confirmed',
+        ]);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'status' => 'rafistoleur',
+        ]);
+
+        Rafistoleur::create([
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'tel' => $request->tel,
+            'location' => $request->location,
+            'password' => Hash::make($request->password),
+        ]);
+
+        $token = JWTAuth::fromUser($user);
+
+        return response()->json(compact('user', 'token'), 201);
+    }
+
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
 
         if (!$token = Auth::attempt($credentials)) {
-            return response()->json(['error' => 'Invalid credentials'], 401);
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        return response()->json(compact('token'));
+        return $this->respondWithToken($token);
     }
 
-    // Récupérer les informations de l'utilisateur actuellement connecté
-    public function me()
+    protected function respondWithToken($token)
     {
-        return response()->json(Auth::user());
-    }
-
-    // Déconnecter l'utilisateur
-    public function logout()
-    {
-        Auth::logout();
-        return response()->json(['message' => 'Successfully logged out']);
-    }
-
-    // Rafraîchir le token JWT
-    public function refresh()
-    {
-        $token = Auth::refresh();
-        return response()->json(compact('token'));
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60
+        ]);
     }
 }

@@ -19,10 +19,10 @@ use App\Http\Controllers\AuthController;
 
 
 
-Route::post('/register-client', [AuthController::class, 'registerClient']);
-Route::post('/register-rafistoleur', [AuthController::class, 'registerRafistoleur']);
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('register-client', [AuthController::class, 'registerClient']);
+Route::post('register-rafistoleur', [AuthController::class, 'registerRafistoleur']);
+Route::post('login', [AuthController::class, 'login']);
+Route::post('register', [AuthController::class, 'register']);
 
 // Route::post('register-client', [AuthController::class,'register-client']);
 // Route::post('register-rafistoleur', [ClientController::class, 'register-rafistoleur']);

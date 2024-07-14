@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
+            $table->string('email')->unique()->index();
             $table->string('password');
             $table->string('status')->default('client'); // Status can be 'client' or 'rafistoleur'
             $table->timestamps();

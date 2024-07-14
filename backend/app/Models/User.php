@@ -37,4 +37,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasOne(Rafistoleur::class);
     }
+
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = Hash::make($value);
+    }
 }
